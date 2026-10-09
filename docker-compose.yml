@@ -1,0 +1,90 @@
+services:
+  database:
+    container_name: database
+    image: postgres:latest
+    restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U camiloapaezg -d capg-hv-db"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: ${CAPG_HV_USER}
+      POSTGRES_PASSWORD: ${CAPG_HV_PW}
+      POSTGRES_DB: ${CAPG_HV_DB}
+    volumes:
+      - database_data:/var/lib/postgresql/18/data#
+
+  blob:
+    container_name: blob
+    restart: always
+    image: chrislusf/seaweedfs:4.21
+    command: "server -s3 -dir=/data -s3.config=/etc/seaweedfs/s3.json"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://localhost:8333/"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    ports:
+      - 9333:9333 # Master API & Web UI
+      - 8333:8333 # S3 API endpoint
+      - 8888:8888 # Filer Browse UI
+    depends_on:
+      database:
+        condition: service_healthy
+    volumes:
+      - ./blob/s3.json:/etc/seaweedfs/s3.json:ro
+      - ./blob/filer.toml:/etc/seaweedfs/filer.toml:ro
+      - blob_data:/data
+
+  antivirus:
+    container_name: antivirus
+    restart: always
+    image: clamav/clamav:1.5.2_base
+    ports:
+      - 3310:3310
+    volumes:
+      - ./antivirus/clamd.conf:/etc/clamav/clamd.conf
+      - antivirus_db:/var/lib/clamav
+
+  message-broker:
+    container_name: message-broker
+    restart: always
+    image: rabbitmq:4.3.0-management
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    ports:
+      - 5672:5672
+      - 15672:15672
+    environment:
+      RABBITMQ_DEFAULT_USER: ${CAPG_HV_USER}
+      RABBITMQ_DEFAULT_PASS: ${CAPG_HV_PW}
+
+  # api:
+  #   container_name: api
+  #   restart: always
+  #   build:
+  #     context: "../../Visual Studio Projects/capg-cv-backend/capg-hv-backend.api"
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - 8080:8080
+  #     - 8081:8081
+  #   volumes:
+  #     - ./api/appsettings.json:/app/appsettings.json:ro
+  #   depends_on:
+  #     database:
+  #       condition: service_healthy
+  #     message-broker:
+  #       condition: service_healthy
+  #     antivirus:
+  #       condition: service_healthy
+
+volumes:
+  database_data:
+  blob_data:
+  antivirus_db:
