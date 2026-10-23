@@ -15,7 +15,7 @@ services:
       POSTGRES_PASSWORD: ${CAPG_HV_PW}
       POSTGRES_DB: ${CAPG_HV_DB}
     volumes:
-      - database_data:/var/lib/postgresql/18/data#
+      - database_data:/var/lib/postgresql/18/data
 
   blob:
     container_name: blob
@@ -65,24 +65,22 @@ services:
       RABBITMQ_DEFAULT_USER: ${CAPG_HV_USER}
       RABBITMQ_DEFAULT_PASS: ${CAPG_HV_PW}
 
-  # api:
-  #   container_name: api
-  #   restart: always
-  #   build:
-  #     context: "../../Visual Studio Projects/capg-cv-backend/capg-hv-backend.api"
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - 8080:8080
-  #     - 8081:8081
-  #   volumes:
-  #     - ./api/appsettings.json:/app/appsettings.json:ro
-  #   depends_on:
-  #     database:
-  #       condition: service_healthy
-  #     message-broker:
-  #       condition: service_healthy
-  #     antivirus:
-  #       condition: service_healthy
+  api:
+    container_name: api
+    restart: always
+    image: camiloapaezg/capg-api:latest
+    ports:
+      - 8080:8080
+      - 8081:8081
+    volumes:
+      - ./api/appsettings.json:/app/appsettings.json:ro
+    depends_on:
+      database:
+        condition: service_healthy
+      message-broker:
+        condition: service_healthy
+      antivirus:
+        condition: service_healthy
 
 volumes:
   database_data:
