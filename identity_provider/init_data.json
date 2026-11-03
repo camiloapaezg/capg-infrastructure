@@ -1,0 +1,41 @@
+{
+  "organizations": [
+    {
+      "owner": "admin",
+      "name": "capg",
+      "displayName": "CAPG",
+      "passwordType": "bcrypt"
+    }
+  ],
+  "applications": [
+    {
+      "owner": "admin",
+      "name": "capg_api",
+      "displayName": "CAPG API",
+      "organization": "capg",
+      "cert": "jwt_cert",
+      "clientId": "capg_api",
+      "clientSecret": "8068b7763be3435d8d46ee2276318ba7",
+      "tokenFormat": "JWT",
+      "grantTypes": [
+        "password",
+        "client_credentials",
+        "token",
+        "id_token",
+        "refresh_token"
+      ]
+    }
+  ],
+  "certs": [
+    {
+      "owner": "admin",
+      "name": "jwt_cert",
+      "displayName": "JWT Certificate",
+      "scope": "JWT",
+      "type": "x509",
+      "cryptoAlgorithm": "RS256",
+      "bitSize": 4096,
+      "expireInYears": 20
+    }
+  ]
+}
